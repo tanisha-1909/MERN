@@ -1,37 +1,52 @@
-import express from "express"
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
 
-const app =express(); // app just a variable and store express function
+const nameSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+});
+const nameModel = mongoose.model("name", nameSchema);
+mongoose.connect("mongodb://127.0.0.1:27017/");
 
-const PORT = 8080; // any value
+const app = express();
+const PORT = 3000;
 
 const names = [
-    {
-        id: 1,
-        name: "Yash1",
-    },
-    {
-        id: 2,
-        name: "Yash2",
-    },
+  {
+    id: 1,
+    name: "Yash1",
+  },
+  {
+    id: 2,
+    name: "Yash2",
+  },
 ];
 
+app.use(cors({ origin: "http://localhost:5173" }));
+
+// TELLING MY SERVER TO ALLOW REQUESTS WITH DATA
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.get("/names", (req, res) => {
-    res.send(names);
-})
+  res.send(names);
+});
+app.post("/add", (req, res) => {
+  console.log(req.body);
+  const newName = req.body;
+  const dataToAdd = new nameModel(newName);
+  dataToAdd.save();
+  res.send("Data Saved");
+});
+app.delete("/delete/:id", (req, res) => {
+  const idToDelete = req.params.id;
+  nameModel.findByIdAndDelete({ idToDelete });
+  res.send(names);
+});
 
-app.post("/add", (req,res) =>{
-    const newName = req.body();
-    const dataToAdd = new names(newName);
-    dataToAdd.save();
-    res.send(names);
-})
-
-app.delete("/delete/:id", (req,res) =>{
-    const idToDelete = req.params.id;
-    names.findByIdAndDelete({ idToDelete });
-    res.send(names);
-})
-
-// app.listen(PORT, () => {
-//     console.log("Server Started at port "+ PORT)
-// })
+app.listen(PORT, () => {
+  console.log("Server started at port " + PORT);
+});
